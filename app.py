@@ -50,5 +50,24 @@ def list_keys():
         "data": DATABASE
     })
 
+# --- Fitur Baru: Hapus Key ---
+@app.route('/delete', methods=['GET'])
+def delete_key():
+    key = request.args.get('key')
+    
+    if not key:
+        return jsonify({"success": False, "message": "Parameter 'key' wajib diisi"}), 400
+    
+    if key not in DATABASE:
+        return jsonify({"success": False, "message": "Key tidak ditemukan"}), 404
+    
+    deleted_data = DATABASE.pop(key)
+    
+    return jsonify({
+        "success": True, 
+        "message": f"Key '{key}' berhasil dihapus",
+        "data": deleted_data
+    })
+
 if __name__ == '__main__':
     app.run(debug=False)
