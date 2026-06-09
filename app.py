@@ -16,7 +16,7 @@ DEFAULT_KEYS = {
     },
     "ARYA": {
         "name": "ARYA 5d",
-        "exp": (datetime.now() + timedelta(days=5)).strftime('%Y-%m-%d'),
+        "exp": (datetime.now() + timedelta(days=6)).strftime('%Y-%m-%d'),
         "created_at": datetime.now().strftime('%Y-%m-%d')
     },
     "cangfk6": {
