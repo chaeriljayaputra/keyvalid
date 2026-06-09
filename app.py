@@ -14,9 +14,9 @@ DEFAULT_KEYS = {
         "exp": (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d'),
         "created_at": datetime.now().strftime('%Y-%m-%d')
     },
-    "VIP-3MONTHS": {
-        "name": "VIP User",
-        "exp": (datetime.now() + timedelta(days=90)).strftime('%Y-%m-%d'),
+    "ARYA": {
+        "name": "ARYA 5d",
+        "exp": (datetime.now() + timedelta(days=5)).strftime('%Y-%m-%d'),
         "created_at": datetime.now().strftime('%Y-%m-%d')
     },
     "cangfk6": {
