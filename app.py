@@ -16,10 +16,6 @@ def generate_key():
     if not key:
         return jsonify({"success": False, "message": "Parameter 'key' wajib diisi"}), 400
     
-    # Cek duplikat
-    if key in DATABASE:
-        return jsonify({"success": False, "message": "Key sudah ada"}), 409
-    
     expiry_date = (datetime.now() + timedelta(days=days_exp)).strftime('%Y-%m-%d')
     
     DATABASE[key] = {
@@ -33,15 +29,26 @@ def generate_key():
 @app.route('/check', methods=['GET'])
 def check_key():
     key = request.args.get('key')
-    
-    if not key:
-        return jsonify({"success": False, "message": "Parameter 'key' wajib diisi"}), 400
-    
     if key not in DATABASE:
         return jsonify({"success": False, "message": "Key tidak ditemukan"}), 404
     
     key_info = DATABASE[key]
-    today = datetime.now().strftime('%Y-%m-%d')
+    if datetime.now().strftime('%Y-%m-%d') > key_info['exp']:
+        return jsonify({"success": False, "message": "Key sudah expired", "data": key_info}), 403
     
-    if today > key_info['exp']:
-        # Hapus key yang expired
+    return jsonify({"success": True, "message": "Key valid", "data": key_info})
+
+# --- Fitur Baru: List Key ---
+@app.route('/listkey001', methods=['GET'])
+def list_keys():
+    if not DATABASE:
+        return jsonify({"success": True, "message": "Belum ada key yang terdaftar", "data": {}})
+    
+    return jsonify({
+        "success": True, 
+        "total_keys": len(DATABASE),
+        "data": DATABASE
+    })
+
+if __name__ == '__main__':
+    app.run(debug=False)
