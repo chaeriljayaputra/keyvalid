@@ -19,7 +19,7 @@ DEFAULT_KEYS = {
         "exp": (datetime.now() + timedelta(days=6)).strftime('%Y-%m-%d'),
         "created_at": datetime.now().strftime('%Y-%m-%d')
     },
-    "cangfk6": {
+    "tsyaa": {
         "name": "Permanent User",
         "exp": "2099-12-31",  # Expired tahun 2099 (permanent)
         "created_at": datetime.now().strftime('%Y-%m-%d')
