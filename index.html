@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key Manager Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #f56565 0%, #ed64a6 100%);
+        }
+
+        .response-area {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f7f7f7;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 13px;
+        }
+
+        .success {
+            color: #48bb78;
+        }
+
+        .error {
+            color: #f56565;
+        }
+
+        .list-card {
+            grid-column: 1 / -1;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .refresh-btn {
+            width: auto;
+            padding: 8px 20px;
+            background: #48bb78;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background: #f7f7f7;
+        }
+
+        .status-valid {
+            color: #48bb78;
+            font-weight: bold;
+        }
+
+        .status-expired {
+            color: #f56565;
+            font-weight: bold;
+        }
+
+        .action-btn {
+            padding: 5px 15px;
+            margin: 0 3px;
+            font-size: 12px;
+            width: auto;
+        }
+
+        .btn-check {
+            background: #4299e1;
+        }
+
+        .btn-delete {
+            background: #f56565;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 Key Manager Dashboard</h1>
+        
+        <div class="grid">
+            <!-- Generate Key Card -->
+            <div class="card">
+                <h2>✨ Generate Key</h2>
+                <div class="form-group">
+                    <label for="genKey">Key Name:</label>
+                    <input type="text" id="genKey" placeholder="Masukkan nama key" required>
+                </div>
+                <div class="form-group">
+                    <label for="genName">User Name:</label>
+                    <input type="text" id="genName" placeholder="Masukkan nama user">
+                </div>
+                <div class="form-group">
+                    <label for="genExp">Expiry (hari):</label>
+                    <input type="number" id="genExp" value="30" min="1" placeholder="Jumlah hari">
+                </div>
+                <button onclick="generateKey()">Generate Key</button>
+                <div id="genResponse" class="response-area"></div>
+            </div>
+
+            <!-- Check Key Card -->
+            <div class="card">
+                <h2>🔍 Check Key</h2>
+                <div class="form-group">
+                    <label for="checkKey">Key Name:</label>
+                    <input type="text" id="checkKey" placeholder="Masukkan key yang ingin dicek">
+                </div>
+                <button onclick="checkKey()">Check Key</button>
+                <div id="checkResponse" class="response-area"></div>
+            </div>
+
+            <!-- Delete Key Card -->
+            <div class="card">
+                <h2>🗑️ Delete Key</h2>
+                <div class="form-group">
+                    <label for="deleteKey">Key Name:</label>
+                    <input type="text" id="deleteKey" placeholder="Masukkan key yang ingin dihapus">
+                </div>
+                <button class="delete-btn" onclick="deleteKey()">Delete Key</button>
+                <div id="deleteResponse" class="response-area"></div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="card">
+                <h2>⚡ Quick Actions</h2>
+                <button onclick="loadAllKeys()" style="margin-bottom: 10px;">📋 Load All Keys</button>
+                <button class="delete-btn" onclick="clearAllInputs()">🧹 Clear All Inputs</button>
+                <div id="quickResponse" class="response-area">
+                    <p style="color: #999;">Klik tombol di atas untuk aksi cepat</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- List Keys Table -->
+        <div class="list-card">
+            <div class="list-header">
+                <h2>📊 Key List</h2>
+                <button class="refresh-btn" onclick="loadAllKeys()">🔄 Refresh List</button>
+            </div>
+            <div id="keyListContainer">
+                <p style="color: #999; text-align: center;">Klik tombol refresh untuk memuat data</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'https://keyvalid.vercel.app';
+
+        // Generate Key
+        async function generateKey() {
+            const key = document.getElementById('genKey').value;
+            const name = document.getElementById('genName').value || 'Unknown';
+            const exp = document.getElementById('genExp').value || 30;
+            const responseDiv = document.getElementById('genResponse');
+
+            if (!key) {
+                responseDiv.innerHTML = '<p class="error">❌ Nama key wajib diisi!</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/generate?key=${key}&name=${name}&exp=${exp}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    responseDiv.innerHTML = `
+                        <p class="success">✅ ${data.message}</p>
+                        <p>📝 Key: ${key}</p>
+                        <p>👤 Name: ${data.data.name}</p>
+                        <p>📅 Expired: ${data.data.exp}</p>
+                        <p>📅 Created: ${data.data.created_at}</p>
+                    `;
+                    loadAllKeys(); // Refresh list
+                } else {
+                    responseDiv.innerHTML = `<p class="error">❌ ${data.message}</p>`;
+                }
+            } catch (error) {
+                responseDiv.innerHTML = '<p class="error">❌ Gagal terhubung ke server</p>';
+            }
+        }
+
+        // Check Key
+        async function checkKey() {
+            const key = document.getElementById('checkKey').value;
+            const responseDiv = document.getElementById('checkResponse');
+
+            if (!key) {
+                responseDiv.innerHTML = '<p class="error">❌ Nama key wajib diisi!</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/check?key=${key}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    responseDiv.innerHTML = `
+                        <p class="success">✅ ${data.message}</p>
+                        <p>👤 Name: ${data.data.name}</p>
+                        <p>📅 Expired: ${data.data.exp}</p>
+                        <p>📅 Created: ${data.data.created_at}</p>
+                    `;
+                } else {
+                    responseDiv.innerHTML = `<p class="error">❌ ${data.message}</p>`;
+                    if (data.data) {
+                        responseDiv.innerHTML += `
+                            <p>📅 Expired: ${data.data.exp}</p>
+                        `;
+                    }
+                }
+            } catch (error) {
+                responseDiv.innerHTML = '<p class="error">❌ Gagal terhubung ke server</p>';
+            }
+        }
+
+        // Delete Key
+        async function deleteKey() {
+            const key = document.getElementById('deleteKey').value;
+            const responseDiv = document.getElementById('deleteResponse');
+
+            if (!key) {
+                responseDiv.innerHTML = '<p class="error">❌ Nama key wajib diisi!</p>';
+                return;
+            }
+
+            if (!confirm(`Apakah Anda yakin ingin menghapus key "${key}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/delete?key=${key}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    responseDiv.innerHTML = `
+                        <p class="success">✅ ${data.message}</p>
+                        <p>👤 Name: ${data.data.name}</p>
+                        <p>📅 Was Expired: ${data.data.exp}</p>
+                    `;
+                    loadAllKeys(); // Refresh list
+                } else {
+                    responseDiv.innerHTML = `<p class="error">❌ ${data.message}</p>`;
+                }
+            } catch (error) {
+                responseDiv.innerHTML = '<p class="error">❌ Gagal terhubung ke server</p>';
+            }
+        }
+
+        // Load All Keys
+        async function loadAllKeys() {
+            const container = document.getElementById('keyListContainer');
+            container.innerHTML = '<div class="loading">🔄 Loading keys...</div>';
+
+            try {
+                const response = await fetch(`${BASE_URL}/listkey001`);
+                const data = await response.json();
+                
+                if (data.success && data.total_keys > 0) {
+                    let tableHTML = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Name</th>
+                                    <th>Expired</th>
+                                    <th>Created</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    for (const [key, info] of Object.entries(data.data)) {
+                        const expDate = new Date(info.exp);
+                        expDate.setHours(0, 0, 0, 0);
+                        const isValid = expDate >= today;
+                        const statusClass = isValid ? 'status-valid' : 'status-expired';
+                        const statusText = isValid ? '✅ Valid' : '❌ Expired';
+
+                        tableHTML += `
+                            <tr>
+                                <td><strong>${key}</strong></td>
+                                <td>${info.name}</td>
+                                <td>${info.exp}</td>
+                                <td>${info.created_at}</td>
+                                <td class="${statusClass}">${statusText}</td>
+                                <td>
+                                    <button class="action-btn btn-check" onclick="quickCheck('${key}')">Check</button>
+                                    <button class="action-btn btn-delete" onclick="quickDelete('${key}')">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    }
+
+                    tableHTML += '</tbody></table>';
+                    container.innerHTML = tableHTML;
+                    
+                    // Update quick response
+                    document.getElementById('quickResponse').innerHTML = `
+                        <p class="success">✅ Total ${data.total_keys} keys ditemukan</p>
+                    `;
+                } else {
+                    container.innerHTML = '<p style="color: #999; text-align: center;">Belum ada key yang terdaftar</p>';
+                    document.getElementById('quickResponse').innerHTML = `
+                        <p style="color: #999;">📭 Database kosong</p>
+                    `;
+                }
+            } catch (error) {
+                container.innerHTML = '<p class="error">❌ Gagal memuat data keys</p>';
+            }
+        }
+
+        // Quick Check
+        async function quickCheck(key) {
+            document.getElementById('checkKey').value = key;
+            await checkKey();
+        }
+
+        // Quick Delete
+        async function quickDelete(key) {
+            document.getElementById('deleteKey').value = key;
+            await deleteKey();
+        }
+
+        // Clear All Inputs
+        function clearAllInputs() {
+            document.getElementById('genKey').value = '';
+            document.getElementById('genName').value = '';
+            document.getElementById('genExp').value = '30';
+            document.getElementById('checkKey').value = '';
+            document.getElementById('deleteKey').value = '';
+            document.getElementById('genResponse').innerHTML = '';
+            document.getElementById('checkResponse').innerHTML = '';
+            document.getElementById('deleteResponse').innerHTML = '';
+            document.getElementById('quickResponse').innerHTML = '<p style="color: #999;">Semua input telah dibersihkan</p>';
+        }
+
+        // Auto-load keys on page load
+        window.addEventListener('load', () => {
+            loadAllKeys();
+        });
+    </script>
+</body>
+</html>
