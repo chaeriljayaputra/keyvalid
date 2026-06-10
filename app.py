@@ -16,9 +16,9 @@ DEFAULT_KEYS = {
         "exp": "2026-06-15",
         "created_at": "2024-01-01"
     },
-    "YANZZZZ": {
-        "name": "YANZ User", 
-        "exp": "2099-12-30",
+    "FKPO54": {
+        "name": "Khusus Yang PO OB54", 
+        "exp": "2026-06-15",
         "created_at": "2024-01-01"
     },
     "YANZ": {
