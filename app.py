@@ -8,7 +8,7 @@ app = Flask(__name__)
 # ============ ADMIN DEVICE (isi dengan device kamu) ============
 # Caranya: akses /my_device, copy device_id, lalu paste di sini
 ADMIN_DEVICES = {
-    "ganti_dengan_device_id_kamu",  # <-- GANTI INI!
+    "9d199a75b7115c387eecd3db59570397",  # <-- GANTI INI!
 }
 
 # ============ DEFAULT KEYS ============
