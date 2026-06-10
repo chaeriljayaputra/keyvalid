@@ -43,6 +43,12 @@ DEFAULT_KEYS = {
         "created_at": "2024-01-01",
         "max_devices": 4
     },
+    "Tyrexuid001": {
+        "name": "Khusus Yang PO OB54", 
+        "exp": "2026-06-15",
+        "created_at": "2024-01-01",
+        "max_devices": 1
+    },
     "YANZ": {
         "name": "Permanent User",
         "exp": "2099-12-31",
