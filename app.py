@@ -1,100 +1,208 @@
 from flask import Flask, request, jsonify
-import requests
+from datetime import datetime, timedelta
+import os
 
 app = Flask(__name__)
 
-# URL API PHP yang sudah diupload ke InfinityFree
-PHP_API_URL = "https://aurelstore.id/api.php"
+# ============ KONFIGURASI KEY DEFAULT ============
+DEFAULT_KEYS = {
+    "MEMBERSENDI": {
+        "name": "Trial User",
+        "exp": "2025-12-31",
+        "created_at": "2024-01-01"
+    },
+    "ARYA": {
+        "name": "ARYA User", 
+        "exp": "2026-06-15",
+        "created_at": "2024-01-01"
+    },
+    "YANZZZZ": {
+        "name": "YANZ User", 
+        "exp": "2099-12-30",
+        "created_at": "2024-01-01"
+    },
+    "YANZ": {
+        "name": "Permanent User",
+        "exp": "2099-12-31",
+        "created_at": "2024-01-01"
+    },
+}
+# =================================================
 
-@app.route('/', methods=['GET'])
-def home():
+DATABASE = {}
+
+def load_keys():
+    global DATABASE
+    DATABASE.clear()
+    for key, value in DEFAULT_KEYS.items():
+        DATABASE[key] = {
+            "name": value["name"],
+            "exp": value["exp"],
+            "created_at": value.get("created_at", datetime.now().strftime('%Y-%m-%d'))
+        }
+    print(f"[LOAD] Loaded {len(DATABASE)} default keys")
+
+def is_expired(expiry_date_str):
+    today = datetime.now().strftime('%Y-%m-%d')
+    return today > expiry_date_str
+
+load_keys()
+
+# ============ ROUTES ============
+
+@app.route('/generate', methods=['GET'])
+def generate_key():
+    admin_key = request.args.get('admin', '')
+    key = request.args.get('key')
+    days_exp = request.args.get('exp')
+    name = request.args.get('name', 'Unknown')
+    
+    if admin_key != 'admin123':
+        return jsonify({"success": False, "message": "Unauthorized, perlu parameter admin=admin123"}), 401
+    
+    if not key:
+        return jsonify({"success": False, "message": "Parameter 'key' wajib diisi"}), 400
+    
+    if days_exp is None:
+        days_exp = 30
+    else:
+        try:
+            days_exp = int(days_exp)
+        except:
+            return jsonify({"success": False, "message": "exp harus angka"}), 400
+    
+    expiry_date = (datetime.now() + timedelta(days=days_exp)).strftime('%Y-%m-%d')
+    
+    DATABASE[key] = {
+        "name": name,
+        "exp": expiry_date,
+        "created_at": datetime.now().strftime('%Y-%m-%d')
+    }
+    
     return jsonify({
-        "status": "running",
-        "message": "API Key Server (Proxy Mode)",
-        "php_api": PHP_API_URL
+        "success": True, 
+        "message": "Key berhasil dibuat", 
+        "data": DATABASE[key]
     })
 
 @app.route('/check', methods=['GET'])
 def check_key():
-    """Cek key - proxy ke PHP API"""
     key = request.args.get('key')
-    if not key:
-        return jsonify({"success": False, "message": "Parameter 'key' required"}), 400
     
-    try:
-        resp = requests.get(f"{PHP_API_URL}/check?key={key}", timeout=30)
-        return jsonify(resp.json()), resp.status_code
-    except requests.exceptions.ConnectionError:
-        return jsonify({"success": False, "message": "Cannot connect to PHP API. Check if aurelstore.id is accessible."}), 500
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
-
-@app.route('/activate', methods=['POST'])
-def activate_key():
-    """Aktivasi key - proxy ke PHP API"""
-    try:
-        resp = requests.post(f"{PHP_API_URL}/activate", json=request.get_json(), timeout=30)
-        return jsonify(resp.json()), resp.status_code
-    except requests.exceptions.ConnectionError:
-        return jsonify({"success": False, "message": "Cannot connect to PHP API"}), 500
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+    print(f"[CHECK] Key requested: {key}")
+    print(f"[CHECK] Available keys: {list(DATABASE.keys())}")
+    
+    if not key:
+        return jsonify({"success": False, "message": "Parameter 'key' wajib diisi"}), 400
+    
+    if key not in DATABASE:
+        return jsonify({
+            "success": False, 
+            "message": f"Key '{key}' tidak ditemukan"
+        }), 404
+    
+    key_info = DATABASE[key]
+    
+    if is_expired(key_info['exp']):
+        return jsonify({
+            "success": False, 
+            "message": f"Key sudah expired pada {key_info['exp']}"
+        }), 403
+    
+    return jsonify({
+        "success": True, 
+        "message": "Key valid", 
+        "data": {
+            "name": key_info['name'],
+            "exp": key_info['exp']
+        }
+    })
 
 @app.route('/listkey001', methods=['GET'])
 def list_keys():
-    """List semua key - proxy ke PHP API"""
-    admin = request.args.get('admin', '')
-    try:
-        resp = requests.get(f"{PHP_API_URL}/listkey001?admin={admin}", timeout=30)
-        return jsonify(resp.json()), resp.status_code
-    except requests.exceptions.ConnectionError:
-        return jsonify({"success": False, "message": "Cannot connect to PHP API"}), 500
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+    admin_key = request.args.get('admin', '')
+    
+    if admin_key != 'admin123':
+        return jsonify({"success": False, "message": "Unauthorized, perlu parameter admin=admin123"}), 401
+    
+    if not DATABASE:
+        return jsonify({"success": True, "message": "Belum ada key yang terdaftar", "data": {}})
+    
+    result = {}
+    for key, info in DATABASE.items():
+        status = "EXPIRED" if is_expired(info['exp']) else "VALID"
+        result[key] = {
+            "name": info['name'],
+            "exp": info['exp'],
+            "created_at": info['created_at'],
+            "status": status
+        }
+    
+    return jsonify({
+        "success": True, 
+        "total_keys": len(DATABASE),
+        "data": result
+    })
 
 @app.route('/delete', methods=['GET'])
 def delete_key():
-    """Hapus key - proxy ke PHP API"""
-    admin = request.args.get('admin', '')
-    key = request.args.get('key', '')
-    try:
-        resp = requests.get(f"{PHP_API_URL}/delete?admin={admin}&key={key}", timeout=30)
-        return jsonify(resp.json()), resp.status_code
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
-
-@app.route('/generate', methods=['GET'])
-def generate_key():
-    """Generate key baru - proxy ke PHP API"""
-    admin = request.args.get('admin', '')
-    key = request.args.get('key', '')
-    exp = request.args.get('exp', '30')
-    name = request.args.get('name', 'Unknown')
-    try:
-        resp = requests.get(f"{PHP_API_URL}/generate?admin={admin}&key={key}&exp={exp}&name={name}", timeout=30)
-        return jsonify(resp.json()), resp.status_code
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
-
-@app.route('/reset_device', methods=['POST'])
-def reset_device():
-    """Reset binding device - proxy ke PHP API"""
-    admin = request.args.get('admin', '')
-    try:
-        resp = requests.post(f"{PHP_API_URL}/reset_device?admin={admin}", json=request.get_json(), timeout=30)
-        return jsonify(resp.json()), resp.status_code
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+    admin_key = request.args.get('admin', '')
+    key = request.args.get('key')
+    
+    if admin_key != 'admin123':
+        return jsonify({"success": False, "message": "Unauthorized, perlu parameter admin=admin123"}), 401
+    
+    if not key:
+        return jsonify({"success": False, "message": "Parameter 'key' wajib diisi"}), 400
+    
+    if key not in DATABASE:
+        return jsonify({"success": False, "message": "Key tidak ditemukan"}), 404
+    
+    deleted_data = DATABASE.pop(key)
+    
+    return jsonify({
+        "success": True, 
+        "message": f"Key '{key}' berhasil dihapus",
+        "data": deleted_data
+    })
 
 @app.route('/reset', methods=['GET'])
-def reset_all():
-    """Reset semua key - proxy ke PHP API"""
-    admin = request.args.get('admin', '')
-    try:
-        resp = requests.get(f"{PHP_API_URL}/reset?admin={admin}", timeout=30)
-        return jsonify(resp.json()), resp.status_code
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+def reset_keys():
+    admin_key = request.args.get('admin', '')
+    
+    if admin_key != 'admin123':
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    
+    DATABASE.clear()
+    load_keys()
+    
+    return jsonify({
+        "success": True,
+        "message": "Database direset, default keys dimuat ulang",
+        "total_keys": len(DATABASE)
+    })
+
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({
+        "success": True,
+        "message": "API Key Server Running",
+        "endpoints": {
+            "check": "/check?key=KEY",
+            "list": "/listkey001?admin=admin123",
+            "generate": "/generate?admin=admin123&key=KEY&exp=30&name=NAME",
+            "delete": "/delete?admin=admin123&key=KEY",
+            "reset": "/reset?admin=admin123"
+        }
+    })
 
 if __name__ == '__main__':
+    print("="*50)
+    print("API KEY SERVER READY")
+    print("="*50)
+    print(f"Total keys: {len(DATABASE)}")
+    for key, info in DATABASE.items():
+        status = "EXPIRED" if is_expired(info['exp']) else "VALID"
+        print(f"  {key} -> {info['name']} (exp: {info['exp']}) [{status}]")
+    print("="*50)
     app.run(debug=False, host='0.0.0.0', port=5000)
