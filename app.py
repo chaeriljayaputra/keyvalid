@@ -16,6 +16,11 @@ DEFAULT_KEYS = {
         "exp": "2026-06-15",
         "created_at": "2024-01-01"
     },
+        "P01": {
+        "name": "1Day User", 
+        "exp": "2026-06-12",
+        "created_at": "2024-01-01"
+    },
     "FKPO54": {
         "name": "Khusus Yang PO OB54", 
         "exp": "2026-06-15",
