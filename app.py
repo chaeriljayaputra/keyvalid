@@ -17,12 +17,12 @@ DEFAULT_KEYS = {
         "exp": "2026-06-15",
         "created_at": "2024-01-01"
     },
-    "YANZ": {
+    "YANZZZZ": {
         "name": "YANZ User", 
         "exp": "2099-12-30",
         "created_at": "2024-01-01"
     },
-    "tsyaa": {
+    "YANZ": {
         "name": "Permanent User",
         "exp": "2099-12-31",
         "created_at": "2024-01-01"
