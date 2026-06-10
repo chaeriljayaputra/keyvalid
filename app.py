@@ -27,8 +27,8 @@ DEFAULT_KEYS = {
         "max_devices": 1,
     },
 
-    "003": {
-        "name": "User Free Key",
+    "padilhandsome": {
+        "name": "User 1Day",
         "exp": "2026-06-11",
         "created_at": "2024-01-01",
         "max_devices": 1,
