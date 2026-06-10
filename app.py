@@ -6,9 +6,9 @@ app = Flask(__name__)
 
 # ============ KONFIGURASI KEY DEFAULT ============
 DEFAULT_KEYS = {
-    "MEMBERSENDI": {
-        "name": "Trial User",
-        "exp": "2025-12-31",
+    "SIYUSUF": {
+        "name": "Permanent User",
+        "exp": "2099-12-31",
         "created_at": "2024-01-01"
     },
     "ARYA": {
