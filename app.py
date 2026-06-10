@@ -8,7 +8,7 @@ app = Flask(__name__)
 # ============ ADMIN DEVICE (isi dengan device kamu) ============
 # Cara dapetin device_id: akses /my_device nanti, copy hasilnya
 ADMIN_DEVICES = {
-    "e1a396b5ff195ad9c4d0bf868b538e43",  # GANTI DENGAN DEVICE KAMU!
+    "0ab220c34fae72314a50ca1f65684776",  # GANTI DENGAN DEVICE KAMU!
 }
 
 # ============ DEFAULT KEYS DENGAN PRE-BOUND DEVICE ============
