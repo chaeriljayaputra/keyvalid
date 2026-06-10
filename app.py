@@ -6,82 +6,113 @@ import hashlib
 app = Flask(__name__)
 
 # ============ ADMIN DEVICE (isi dengan device kamu) ============
-# Caranya: akses /my_device, copy device_id, lalu paste di sini
+# Cara dapetin device_id: akses /my_device nanti, copy hasilnya
 ADMIN_DEVICES = {
-    "9d199a75b7115c387eecd3db59570397",  # <-- GANTI INI!
+    "9d199a75b7115c387eecd3db59570397",  # GANTI DENGAN DEVICE KAMU!
 }
 
-# ============ DEFAULT KEYS ============
+# ============ DEFAULT KEYS DENGAN PRE-BOUND DEVICE ============
+# 
+# Cara pakai:
+# 1. Kalau mau key sudah terikat ke device tertentu, tambahkan "device_id": "xxx"
+# 2. Kalau tidak ditulis, key akan binding otomatis saat pertama dipakai
+# 3. max_devices: berapa banyak device yang boleh pakai key ini
+#
 DEFAULT_KEYS = {
+    # ============ KEYS UNTUK ADMIN/TESTING ============
     "TESTING1": {
         "name": "Admin Test Key",
         "exp": "2099-12-31",
         "created_at": "2024-01-01",
-        "max_devices": 5  # untuk testing bisa multi device
+        "max_devices": 5,
+        "device_id": "6f46bae6b02d6f8338272441ce5609e5"  # pre-bound ke device testing
     },
+    
+    # ============ KEYS PERMANENT (tidak expired) ============
     "SIYUSUF": {
         "name": "Permanent User",
         "exp": "2099-12-31",
         "created_at": "2024-01-01",
-        "max_devices": 1
+        "max_devices": 1,
+        # tanpa device_id -> akan binding otomatis saat pertama dipakai
     },
-    "ARYA": {
-        "name": "ARYA User", 
-        "exp": "2026-06-15",
-        "created_at": "2024-01-01",
-        "max_devices": 1
-    },
-    "P01": {
-        "name": "1Day User", 
-        "exp": "2026-06-12",
-        "created_at": "2024-01-01",
-        "max_devices": 1
-    },
-    "FKPO54": {
-        "name": "Khusus Yang PO OB54", 
-        "exp": "2026-06-15",
-        "created_at": "2024-01-01",
-        "max_devices": 4
-    },
-    "Tyrexuid001": {
-        "name": "User 1D", 
-        "exp": "2026-06-12",
-        "created_at": "2024-01-01",
-        "max_devices": 1
-    },
+    
     "YANZ": {
         "name": "Permanent User",
         "exp": "2099-12-31",
         "created_at": "2024-01-01",
-        "max_devices": 1
+        "max_devices": 1,
     },
+    
+    # ============ KEYS DENGAN MASA BERLAKU ============
+    "ARYA": {
+        "name": "ARYA User", 
+        "exp": "2026-06-15",
+        "created_at": "2024-01-01",
+        "max_devices": 1,
+    },
+    
+    "P01": {
+        "name": "1Day User", 
+        "exp": "2026-06-12",
+        "created_at": "2024-01-01",
+        "max_devices": 1,
+    },
+    
+    "FKPO54": {
+        "name": "Khusus Yang PO OB54", 
+        "exp": "2026-06-15",
+        "created_at": "2024-01-01",
+        "max_devices": 4,  # bisa 4 device berbeda
+    },
+    
+    "Tyrexuid001": {
+        "name": "User 1D", 
+        "exp": "2026-06-12",
+        "created_at": "2024-01-01",
+        "max_devices": 1,
+        "device_id": "555d618962e14faa04fc35d9f6b7e5c7"  # pre-bound ke device user
+    },
+    
+    # ============ TAMBAH KEY BARU DI SINI ============
+    # Contoh key dengan pre-bound device:
+    # "NAMA_KEY": {
+    #     "name": "Nama User",
+    #     "exp": "2026-12-31",
+    #     "created_at": "2024-01-01",
+    #     "max_devices": 1,
+    #     "device_id": "device_id_nya_disini"
+    # },
+    #
+    # Contoh key tanpa pre-bound (binding otomatis):
+    # "NAMA_KEY2": {
+    #     "name": "Nama User 2",
+    #     "exp": "2026-12-31",
+    #     "created_at": "2024-01-01",
+    #     "max_devices": 1,
+    # },
 }
 
 # ============ GLOBAL VARS ============
 DATABASE = {}
-KEY_BINDINGS = {}  # key -> {"devices": [], "bound_at": "", "bound_ip": ""}
+KEY_BINDINGS = {}
 REQUEST_LOGS = []
 BLOCKED_ATTEMPTS = []
 
 # ============ HELPER FUNCTIONS ============
 
 def is_admin():
-    """Cek apakah request dari device admin"""
     device_id = get_device_id()
     return device_id in ADMIN_DEVICES
 
 def get_device_id():
-    """Ambil device_id dari header atau buat fingerprint"""
     device_id = request.headers.get('X-Device-ID', '')
-    
     if not device_id:
         fingerprint = f"{request.remote_addr}|{request.headers.get('User-Agent', '')}"
         device_id = hashlib.sha256(fingerprint.encode()).hexdigest()[:32]
-    
     return device_id
 
 def bind_key(key, device_id, ip):
-    """Binding key ke device (support multi device)"""
     max_devices = DATABASE.get(key, {}).get("max_devices", 1)
     
     if key not in KEY_BINDINGS:
@@ -104,7 +135,6 @@ def bind_key(key, device_id, ip):
     return True, f"Device baru ditambahkan ({len(binding['devices'])}/{max_devices})"
 
 def is_device_allowed(key, device_id):
-    """Cek apakah device diizinkan"""
     if key not in KEY_BINDINGS:
         return True
     return device_id in KEY_BINDINGS[key]["devices"]
@@ -121,8 +151,9 @@ def log(endpoint, key, status, success, msg, device_id, blocked=False):
         BLOCKED_ATTEMPTS.append(log_entry)
 
 def load_keys():
-    global DATABASE
+    global DATABASE, KEY_BINDINGS
     DATABASE.clear()
+    
     for key, value in DEFAULT_KEYS.items():
         DATABASE[key] = {
             "name": value["name"],
@@ -130,18 +161,34 @@ def load_keys():
             "created_at": value.get("created_at", datetime.now().strftime('%Y-%m-%d')),
             "max_devices": value.get("max_devices", 1)
         }
-    print(f"[LOAD] Loaded {len(DATABASE)} keys")
+        
+        # CEK APAKAH ADA DEVICE_ID OPSIONAL (PRE-BOUND)
+        if "device_id" in value and value["device_id"]:
+            device_id = value["device_id"]
+            if key not in KEY_BINDINGS:
+                KEY_BINDINGS[key] = {
+                    "devices": [device_id],
+                    "bound_at": value.get("created_at", "2024-01-01") + "T00:00:00",
+                    "bound_ip": "predefined"
+                }
+                print(f"[PRE-BOUND] Key '{key}' -> device: {device_id[:16]}...")
+            else:
+                if device_id not in KEY_BINDINGS[key]["devices"]:
+                    KEY_BINDINGS[key]["devices"].append(device_id)
+                    print(f"[PRE-BOUND] Key '{key}' add device: {device_id[:16]}...")
+    
+    print(f"[LOAD] Total keys: {len(DATABASE)}, Pre-bound: {len(KEY_BINDINGS)}")
 
 def is_expired(exp_date):
     return datetime.now().strftime('%Y-%m-%d') > exp_date
 
+# Load keys (auto pre-bound dari DEFAULT_KEYS)
 load_keys()
 
 # ============ MAIN API ============
 
 @app.route('/check', methods=['GET'])
 def check_key():
-    """Cek key - endpoint utama untuk scgen.py"""
     key = request.args.get('key')
     device_id = get_device_id()
     
@@ -162,7 +209,7 @@ def check_key():
     # CEK DEVICE
     if not is_device_allowed(key, device_id):
         binding = KEY_BINDINGS.get(key, {})
-        log('/check', key, 403, False, f"Device BLOCKED! Key terikat ke device lain", device_id, blocked=True)
+        log('/check', key, 403, False, f"Device BLOCKED!", device_id, blocked=True)
         return jsonify({
             "success": False,
             "message": f"⛔ KEY SUDAH TERPAKAI DI DEVICE LAIN! ⛔",
@@ -171,7 +218,7 @@ def check_key():
             "your_device": device_id[:16] + "..."
         }), 403
     
-    # BINDING OTOMATIS
+    # BINDING OTOMATIS (jika key belum terikat dan tidak ada pre-bound)
     if key not in KEY_BINDINGS:
         success, msg = bind_key(key, device_id, request.remote_addr)
         log('/check', key, 200, True, msg, device_id)
@@ -186,7 +233,7 @@ def check_key():
             }
         })
     
-    # NORMAL
+    # NORMAL (sudah terikat)
     binding = KEY_BINDINGS[key]
     log('/check', key, 200, True, "Key valid", device_id)
     return jsonify({
@@ -200,13 +247,62 @@ def check_key():
         }
     })
 
-# ============ ADMIN API (hanya untuk device mu) ============
+@app.route('/activate', methods=['POST'])
+def activate_key():
+    """Endpoint untuk aktivasi/binding (dipanggil scgen.py)"""
+    data = request.get_json() or {}
+    key = data.get('key')
+    device_id = data.get('device_id')
+    
+    if not key or not device_id:
+        return jsonify({"success": False, "message": "Key dan device_id required"}), 400
+    
+    if key not in DATABASE:
+        return jsonify({"success": False, "message": "Key tidak ditemukan"}), 404
+    
+    info = DATABASE[key]
+    
+    if is_expired(info['exp']):
+        return jsonify({"success": False, "message": f"Key expired pada {info['exp']}"}), 403
+    
+    # CEK DEVICE
+    if not is_device_allowed(key, device_id):
+        binding = KEY_BINDINGS.get(key, {})
+        max_devices = info.get("max_devices", 1)
+        
+        if len(binding.get("devices", [])) >= max_devices:
+            return jsonify({
+                "success": False,
+                "message": f"Key sudah terikat ke {len(binding['devices'])} device (maks {max_devices})"
+            }), 403
+        else:
+            # Tambah device baru
+            if key not in KEY_BINDINGS:
+                KEY_BINDINGS[key] = {"devices": [], "bound_at": "", "bound_ip": ""}
+            KEY_BINDINGS[key]["devices"].append(device_id)
+            KEY_BINDINGS[key]["bound_at"] = datetime.now().isoformat()
+            KEY_BINDINGS[key]["bound_ip"] = request.remote_addr
+            return jsonify({
+                "success": True,
+                "message": f"Device baru ditambahkan ({len(KEY_BINDINGS[key]['devices'])}/{max_devices})",
+                "data": {"name": info['name'], "exp": info['exp']}
+            })
+    else:
+        # Device sudah terdaftar
+        if key not in KEY_BINDINGS:
+            KEY_BINDINGS[key] = {"devices": [device_id], "bound_at": datetime.now().isoformat(), "bound_ip": request.remote_addr}
+        return jsonify({
+            "success": True,
+            "message": "Key valid",
+            "data": {"name": info['name'], "exp": info['exp']}
+        })
+
+# ============ ADMIN API ============
 
 @app.route('/admin/reset', methods=['POST'])
 def admin_reset_binding():
-    """Reset binding key - hanya admin yang bisa"""
     if not is_admin():
-        return jsonify({"success": False, "message": "Unauthorized - Bukan device admin"}), 401
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
     
     data = request.get_json() or {}
     key = data.get('key')
@@ -226,7 +322,6 @@ def admin_reset_binding():
 
 @app.route('/admin/list', methods=['GET'])
 def admin_list():
-    """Lihat semua key + binding - hanya admin"""
     if not is_admin():
         return jsonify({"success": False, "message": "Unauthorized"}), 401
     
@@ -247,7 +342,6 @@ def admin_list():
 
 @app.route('/admin/create', methods=['POST'])
 def admin_create_key():
-    """Buat key baru - hanya admin"""
     if not is_admin():
         return jsonify({"success": False, "message": "Unauthorized"}), 401
     
@@ -256,6 +350,7 @@ def admin_create_key():
     name = data.get('name', 'New User')
     days = data.get('days', 30)
     max_devices = data.get('max_devices', 1)
+    device_id = data.get('device_id', None)  # opsional pre-bound
     
     if not key:
         return jsonify({"success": False, "message": "Parameter 'key' wajib diisi"}), 400
@@ -272,11 +367,18 @@ def admin_create_key():
         "max_devices": max_devices
     }
     
+    # Jika ada device_id, langsung binding
+    if device_id:
+        KEY_BINDINGS[key] = {
+            "devices": [device_id],
+            "bound_at": datetime.now().isoformat(),
+            "bound_ip": request.remote_addr
+        }
+    
     return jsonify({"success": True, "message": f"Key '{key}' berhasil dibuat", "data": DATABASE[key]})
 
 @app.route('/admin/delete', methods=['POST'])
 def admin_delete_key():
-    """Hapus key - hanya admin"""
     if not is_admin():
         return jsonify({"success": False, "message": "Unauthorized"}), 401
     
@@ -297,7 +399,6 @@ def admin_delete_key():
 
 @app.route('/admin/logs', methods=['GET'])
 def admin_logs():
-    """Lihat semua log - hanya admin"""
     if not is_admin():
         return jsonify({"success": False, "message": "Unauthorized"}), 401
     
@@ -311,17 +412,15 @@ def admin_logs():
 
 @app.route('/admin/blocked', methods=['GET'])
 def admin_blocked():
-    """Lihat percobaan yang diblok - hanya admin"""
     if not is_admin():
         return jsonify({"success": False, "message": "Unauthorized"}), 401
     
     return jsonify({"success": True, "total": len(BLOCKED_ATTEMPTS), "attempts": BLOCKED_ATTEMPTS})
 
-# ============ PUBLIC API (tanpa auth) ============
+# ============ PUBLIC API ============
 
 @app.route('/my_device', methods=['GET'])
 def my_device():
-    """Lihat device ID sendiri"""
     return jsonify({
         "success": True,
         "device_id": get_device_id(),
@@ -331,7 +430,6 @@ def my_device():
 
 @app.route('/verify', methods=['GET'])
 def verify():
-    """Cek status key (versi simpel)"""
     key = request.args.get('key')
     if not key:
         return jsonify({"success": False, "message": "Key required"}), 400
@@ -359,6 +457,7 @@ def home():
         "is_admin": is_admin(),
         "endpoints": {
             "check": "/check?key=KEY",
+            "activate": "POST /activate",
             "verify": "/verify?key=KEY",
             "my_device": "/my_device",
             "admin": {
@@ -378,6 +477,6 @@ if __name__ == '__main__':
     print("="*50)
     print(f"Admin Device: {list(ADMIN_DEVICES)}")
     print(f"Total Keys: {len(DATABASE)}")
-    print("\n🔑 TEST KEY: TESTING (max 5 devices)")
+    print(f"Pre-bound Keys: {len(KEY_BINDINGS)}")
     print("="*50)
     app.run(debug=False, host='0.0.0.0', port=5000)
