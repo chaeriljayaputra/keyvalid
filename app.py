@@ -32,6 +32,7 @@ DEFAULT_KEYS = {
         "exp": "2026-06-11",
         "created_at": "2024-01-01",
         "max_devices": 1,
+    },
 
     "padilhandsome": {
         "name": "User 1Day",
