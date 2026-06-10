@@ -26,12 +26,19 @@ DEFAULT_KEYS = {
         "created_at": "2024-01-01",
         "max_devices": 1,
     },
+    
+    "009": {
+        "name": "FreeKey",
+        "exp": "2026-06-11",
+        "created_at": "2024-01-01",
+        "max_devices": 1,
 
     "padilhandsome": {
         "name": "User 1Day",
         "exp": "2026-06-11",
         "created_at": "2024-01-01",
-        "max_devices": 1,
+        "max_devices": 1,    
+        "device_id": "f5588878b5bfb14347ff30939a0eb338"
     },
     
     # ============ KEYS PERMANENT (tidak expired) ============
