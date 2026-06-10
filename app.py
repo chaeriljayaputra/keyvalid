@@ -20,12 +20,11 @@ ADMIN_DEVICES = {
 #
 DEFAULT_KEYS = {
     # ============ KEYS UNTUK ADMIN/TESTING ============
-    "TESTING1": {
-        "name": "Admin Test Key",
+    "hanz": {
+        "name": "Hanz Permanent",
         "exp": "2099-12-31",
         "created_at": "2024-01-01",
-        "max_devices": 5,
-        "device_id": "6f46bae6b02d6f8338272441ce5609e5"  # pre-bound ke device testing
+        "max_devices": 1,
     },
     
     # ============ KEYS PERMANENT (tidak expired) ============
