@@ -26,6 +26,13 @@ DEFAULT_KEYS = {
         "created_at": "2024-01-01",
         "max_devices": 1,
     },
+
+    "003": {
+        "name": "User Free Key",
+        "exp": "2026-06-11",
+        "created_at": "2024-01-01",
+        "max_devices": 1,
+    },
     
     # ============ KEYS PERMANENT (tidak expired) ============
     "SIYUSUF": {
