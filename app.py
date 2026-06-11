@@ -25,7 +25,6 @@ DEFAULT_KEYS = {
     "009": {
         "name": "FreeKey",
         "exp": "2026-06-12",
-        "exp_minutes": 1,
         "created_at": "2024-01-01"
     },
 
