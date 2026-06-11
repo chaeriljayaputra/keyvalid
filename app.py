@@ -15,6 +15,11 @@ DEFAULT_KEYS = {
         "name": "User 1Day",
         "exp": "2026-06-12",
         "created_at": "2024-01-01"
+    },    
+    "009": {
+        "name": "Free Key 1Day",
+        "exp": "2026-06-12",
+        "created_at": "2024-01-01"
     },
     "padilhandsome": {
         "name": "User 1Day",
