@@ -11,8 +11,8 @@ DEFAULT_KEYS = {
         "exp": "2099-12-31",
         "created_at": "2024-01-01"
     },
-    "009": {
-        "name": "FreeKey",
+    "rudalkuda": {
+        "name": "User 1Day",
         "exp": "2026-06-12",
         "created_at": "2024-01-01"
     },
